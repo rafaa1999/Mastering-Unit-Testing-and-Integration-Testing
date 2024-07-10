@@ -140,8 +140,56 @@ class CustomerIntegrationTest {
     }
 
     @Test
-    @Disabled
-    void deleteCustomer() {
+    void shouldDeleteCustomer() {
+        //given
+        CreateCustomerRequest request =
+                new CreateCustomerRequest(
+                        "name",
+                        "email" + UUID.randomUUID() + "@gmail.com", //unique
+                        "address"
+                );
+        ResponseEntity<Void> createCustomerResponse = testRestTemplate.exchange(
+                API_CUSTOMERS_PATH,
+                POST,
+                new HttpEntity<>(request),
+                Void.class);
+        assertThat(createCustomerResponse.getStatusCode())
+                .isEqualTo(HttpStatus.OK);
+        //get all customers request
+        ResponseEntity<List<Customer>> allCustomersResponse = testRestTemplate.exchange(
+                API_CUSTOMERS_PATH,
+                GET,
+                null,
+                new ParameterizedTypeReference<>() {
+                }
+        );
+        assertThat(allCustomersResponse.getStatusCode())
+                .isEqualTo(HttpStatus.OK);
+
+        Long id = Objects.requireNonNull(allCustomersResponse.getBody()).stream()
+                .filter(c -> c.getEmail().equals(request.email()))
+                .map(Customer::getId)
+                .findFirst()
+                .orElseThrow();
+        //when
+        testRestTemplate.exchange(
+                API_CUSTOMERS_PATH + "/" + id,
+                DELETE,
+                null,
+                Void.class
+        ).getStatusCode().is2xxSuccessful();
+        //then
+        //getCustomerById after we deleted that customer
+        ResponseEntity<Object> customerByIdResponse = testRestTemplate.exchange(
+                API_CUSTOMERS_PATH + "/" + id,
+                GET,
+                null,
+                new ParameterizedTypeReference<>() {
+                }
+        );
+
+        assertThat(customerByIdResponse.getStatusCode())
+                .isEqualTo(HttpStatus.NOT_FOUND);
     }
 
 }
