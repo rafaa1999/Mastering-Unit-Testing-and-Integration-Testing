@@ -16,8 +16,9 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.utility.DockerImageName;
 
 import java.util.List;
+import java.util.Objects;
+import java.util.UUID;
 
-import static org.assertj.core.api.Assertions.as;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.http.HttpMethod.*;
 
@@ -81,18 +82,61 @@ class CustomerIntegrationTest {
     }
 
     @Test
-    @Disabled
-    void getCustomerById() {
-    }
+    void shouldUpdateCustomer() {
+        //given
+        CreateCustomerRequest request =
+                new CreateCustomerRequest(
+                        "rafaa",
+                        "email" + UUID.randomUUID() + "@gmail.com", //unique
+                        "TN"
+                );
+        ResponseEntity<Void> createCustomerResponse = testRestTemplate.exchange(
+                API_CUSTOMERS_PATH,
+                POST,
+                new HttpEntity<>(request),
+                Void.class);
+        assertThat(createCustomerResponse.getStatusCode())
+                .isEqualTo(HttpStatus.OK);
+        //get all customers request
+        ResponseEntity<List<Customer>> allCustomersResponse = testRestTemplate.exchange(
+                API_CUSTOMERS_PATH,
+                GET,
+                null,
+                new ParameterizedTypeReference<>() {
+                }
+        );
+        assertThat(allCustomersResponse.getStatusCode())
+                .isEqualTo(HttpStatus.OK);
 
-    @Test
-    @Disabled
-    void createCustomer() {
-    }
+        Long id = Objects.requireNonNull(allCustomersResponse.getBody()).stream()
+                .filter(c -> c.getEmail().equals(request.email()))
+                .map(Customer::getId)
+                .findFirst()
+                .orElseThrow();
+        String newEmail = "newEmail" + UUID.randomUUID() + "@gmail.com";
+        //when
+        testRestTemplate.exchange(
+                        API_CUSTOMERS_PATH + "/" + id + "?email=" + newEmail,
+                        PUT,
+                        null,
+                        Void.class)
+                .getStatusCode().is2xxSuccessful();
+        //getCustomerById after we updated
+        ResponseEntity<Customer> customerByIdResponse = testRestTemplate.exchange(
+                API_CUSTOMERS_PATH + "/" + id,
+                GET,
+                null,
+                new ParameterizedTypeReference<>() {
+                }
+        );
+        assertThat(customerByIdResponse.getStatusCode())
+                .isEqualTo(HttpStatus.OK);
+        //Do the comparison customer updated with new email we want to update
+        Customer customerUpdated = Objects.requireNonNull(customerByIdResponse.getBody());
 
-    @Test
-    @Disabled
-    void updateCustomer() {
+        assertThat(customerUpdated.getName()).isEqualTo(request.name());
+        assertThat(customerUpdated.getEmail()).isEqualTo(newEmail);
+        assertThat(customerUpdated.getAddress()).isEqualTo(request.address());
     }
 
     @Test
