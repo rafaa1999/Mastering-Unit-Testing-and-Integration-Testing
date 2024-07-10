@@ -1,5 +1,6 @@
 package com.ntloc.demo.customer;
 
+import com.ntloc.demo.AbstractTestcontainersTest;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,23 +25,12 @@ import static org.springframework.http.HttpMethod.*;
 
 @Testcontainers
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-class CustomerIntegrationTest {
-
-    @Container
-    @ServiceConnection
-    static PostgreSQLContainer<?> postgreSQLContainer
-            = new PostgreSQLContainer<>(DockerImageName.parse("postgres:16.2"));
+class CustomerIntegrationTest extends AbstractTestcontainersTest {
 
     @Autowired
     TestRestTemplate testRestTemplate;
 
     public static final String API_CUSTOMERS_PATH = "/api/v1/customers";
-
-    @Test
-    void canEstablishConnection(){
-        assertThat(postgreSQLContainer.isCreated()).isTrue();
-        assertThat(postgreSQLContainer.isRunning()).isTrue();
-    }
 
     @Test
     void shouldCreateCustomer() {

@@ -1,5 +1,6 @@
 package com.ntloc.demo.customer;
 
+import com.ntloc.demo.AbstractTestcontainersTest;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -19,12 +20,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 @DataJpaTest
 @Testcontainers
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
-class CustomerRepositoryTest {
+class CustomerRepositoryTest extends AbstractTestcontainersTest {
 
-    @Container
-    @ServiceConnection
-    static PostgreSQLContainer<?> postgreSQLContainer
-            = new PostgreSQLContainer<>(DockerImageName.parse("postgres:16.2"));
     @Autowired
     CustomerRepository customerRepository;
 
@@ -41,12 +38,6 @@ class CustomerRepositoryTest {
     @AfterEach
     void tearDown() {
         customerRepository.deleteAll();
-    }
-
-    @Test
-    void canEstablishConnection(){
-        assertThat(postgreSQLContainer.isCreated()).isTrue();
-        assertThat(postgreSQLContainer.isRunning()).isTrue();
     }
 
     @Test
