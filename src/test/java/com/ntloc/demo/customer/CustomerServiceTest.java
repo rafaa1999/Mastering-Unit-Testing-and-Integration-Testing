@@ -3,7 +3,6 @@ package com.ntloc.demo.customer;
 import com.ntloc.demo.exception.CustomerEmailUnavailableException;
 import com.ntloc.demo.exception.CustomerNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -43,8 +42,34 @@ class CustomerServiceTest {
     }
 
     @Test
-    @Disabled
-    void getCustomerById() {
+    void shouldThrowNotFoundWhenGivenInvalidIDWhileGetCustomerById() {
+        //given
+        long id = 5L;
+        when(customerRepository.findById(anyLong())).thenReturn(Optional.empty());
+        //when
+        //then
+        assertThatThrownBy(() ->
+                underTest.getCustomerById(id))
+                .isInstanceOf(CustomerNotFoundException.class)
+                .hasMessage("Customer with id " + id + " doesn't found");
+    }
+
+    @Test
+    void shouldGetCustomerById() {
+        //given
+        long id = 5L;
+        String name = "leon";
+        String email = "leon@gmail.com";
+        String address = "US";
+        Customer customer = Customer.create( id, name, email, address );
+        when(customerRepository.findById(id)).thenReturn(Optional.of(customer));
+        //when
+        Customer customerById = underTest.getCustomerById(id);
+        //then
+        assertThat(customerById.getId()).isEqualTo(id);
+        assertThat(customerById.getName()).isEqualTo(name);
+        assertThat(customerById.getEmail()).isEqualTo(email);
+        assertThat(customerById.getAddress()).isEqualTo(address);
     }
 
     @Test
