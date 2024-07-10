@@ -172,8 +172,54 @@ class CustomerServiceTest {
     }
 
     @Test
-    @Disabled
-    void deleteCustomer() {
+    void shouldUpdateAllAttributeWhenUpdateCustomer() {
+        //given
+        long id = 5L;
+        Customer customer = Customer.create(
+                id,
+                "leon",
+                "leon@gmail.com",
+                "US"
+        );
+        String newName = "leonaldo";
+        String newEmail = "leonaldo@gmail.com";
+        String newAddress = "UK";
+        when(customerRepository.findById(id))
+                .thenReturn(Optional.of(customer));
+        //when
+        underTest.updateCustomer(id, newName, newEmail, newAddress);
+        //then
+        verify(customerRepository).save(customerArgumentCaptor.capture());
+        Customer capturedCustomer = customerArgumentCaptor.getValue();
+
+        assertThat(capturedCustomer.getName()).isEqualTo(newName);
+        assertThat(capturedCustomer.getEmail()).isEqualTo(newEmail);
+        assertThat(capturedCustomer.getAddress()).isEqualTo(newAddress);
+    }
+
+    @Test
+    void shouldThrowNotFoundWhenGivenIdDoesNotExistWhileDeleteCustomer() {
+        //given
+        long id = 5L;
+        when(customerRepository.existsById(id)).thenReturn(false);
+        //when
+        //then
+        assertThatThrownBy(() ->
+                underTest.deleteCustomer(id))
+                .isInstanceOf(CustomerNotFoundException.class)
+                .hasMessage("Customer with id " + id + " doesn't exist.");
+        verify(customerRepository,never()).delete(any());
+    }
+
+    @Test
+    void shouldDeleteCustomer(){
+        //given
+        long id = 5L;
+        when(customerRepository.existsById(id)).thenReturn(true);
+        //when
+        underTest.deleteCustomer(id);
+        //then
+        verify(customerRepository).deleteById(id);
     }
 
 }
